@@ -1,7 +1,14 @@
 import React from 'react';
 import { Users } from 'lucide-react';
 import { Card } from '../ui/Card';
-import { destinations } from '@/lib/mockData';
+// import { destinations } from '@/lib/mockData';
+import { getPopularDestinations } from '@/lib/api';
+import { Destination } from '@/types/destination';
+
+
+  const response = await getPopularDestinations();
+  const destinations: Destination[] = response.data;
+
 export function DestinationGrid() {
   return <section className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
