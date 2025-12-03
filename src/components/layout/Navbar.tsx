@@ -31,10 +31,10 @@ export function Navbar() {
             <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
               Dashboard
             </Link>
-            <Button variant="outline" size="sm">
+            <Link href="/login" variant="outline" size="sm">
               Login
-            </Button>
-            <Button size="sm">Sign Up</Button>
+            </Link>
+            <Link href="/registration">Registration</Link>
           </div>
 
           <button className="md:hidden p-2" onClick={() => setIsOpen(!isOpen)}>
