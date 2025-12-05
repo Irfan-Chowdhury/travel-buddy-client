@@ -144,3 +144,83 @@ export async function deleteUserApi(id: string) {
 }
 
 
+// ======== Travel Plan =========
+
+// Typescript type matching Laravel shape
+export interface TravelPlan {
+  id: number;
+  user_id: number;
+  destination: string;
+  start_date: string;
+  end_date: string;
+  budget: number | null;
+  travel_type: string | null;
+  itinerary: string | null;
+  group_size: number;
+  status: "active" | "completed" | "cancelled";
+  created_at: string;
+  updated_at: string;
+}
+
+// GET /travel-plans?page=1&user_id=?
+export async function getTravelPlans(page = 1, userId?: number) {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  if (userId) params.set("user_id", String(userId));
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/travel-plans?${params.toString()}`,
+    { cache: "no-store" }
+  );
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw { status: res.status, data: body };
+  }
+
+  return body; // {statusCode, success, message, data: paginator}
+}
+
+// CREATE
+export async function createTravelPlan(data: any) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/travel-plans`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw { status: res.status, data: body };
+  return body;
+}
+
+// UPDATE
+export async function updateTravelPlan(id: number, data: any) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/travel-plans/${id}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }
+  );
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw { status: res.status, data: body };
+  return body;
+}
+
+// DELETE
+export async function deleteTravelPlan(id: number) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/travel-plans/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw { status: res.status, data: body };
+  return body;
+}
+

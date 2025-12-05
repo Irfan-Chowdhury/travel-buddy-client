@@ -5,13 +5,12 @@ import { X } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Label } from "../ui/Label";
-import type { TravelPlan } from "@/lib/api";
 
 interface TravelPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: any) => void;
-  initialData?: TravelPlan | null;
+  initialData?: any;
 }
 
 export function TravelPlanModal({
@@ -24,37 +23,35 @@ export function TravelPlanModal({
     destination: "",
     startDate: "",
     endDate: "",
-    budget: "",
-    travelType: "Solo",
-    itinerary: "",
+    minBudget: "",
+    maxBudget: "",
+    type: "Solo",
+    description: "",
     status: "active",
-    groupSize: "1",
   });
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        destination: initialData.destination ?? "",
-        startDate: initialData.start_date ?? "",
-        endDate: initialData.end_date ?? "",
-        budget: initialData.budget ? String(initialData.budget) : "",
-        travelType: initialData.travel_type ?? "Solo",
-        itinerary: initialData.itinerary ?? "",
-        status: initialData.status ?? "active",
-        groupSize: initialData.group_size
-          ? String(initialData.group_size)
-          : "1",
+        destination: initialData.destination || "",
+        startDate: initialData.startDate || "",
+        endDate: initialData.endDate || "",
+        minBudget: initialData.budget?.min || "",
+        maxBudget: initialData.budget?.max || "",
+        type: initialData.type || "Solo",
+        description: initialData.description || "",
+        status: initialData.status || "active",
       });
     } else {
       setFormData({
         destination: "",
         startDate: "",
         endDate: "",
-        budget: "",
-        travelType: "Solo",
-        itinerary: "",
+        minBudget: "",
+        maxBudget: "",
+        type: "Solo",
+        description: "",
         status: "active",
-        groupSize: "1",
       });
     }
   }, [initialData, isOpen]);
@@ -63,20 +60,13 @@ export function TravelPlanModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     onSubmit({
-      // match Laravel fields exactly
-      user_id: 1, // TODO: replace with real logged-in user id later
-      destination: formData.destination,
-      start_date: formData.startDate,
-      end_date: formData.endDate,
-      budget: formData.budget ? Number(formData.budget) : null,
-      travel_type: formData.travelType,
-      itinerary: formData.itinerary,
-      status: formData.status,
-      group_size: formData.groupSize ? Number(formData.groupSize) : 1,
+      ...formData,
+      budget: {
+        min: Number(formData.minBudget),
+        max: Number(formData.maxBudget),
+      },
     });
-
     onClose();
   };
 
@@ -144,31 +134,31 @@ export function TravelPlanModal({
               />
             </div>
 
-            {/* Budget */}
+            {/* Min Budget */}
             <div>
-              <Label htmlFor="budget">Budget ($)</Label>
+              <Label htmlFor="minBudget">Min Budget ($)</Label>
               <Input
-                id="budget"
+                id="minBudget"
                 type="number"
-                value={formData.budget}
+                value={formData.minBudget}
                 onChange={(e) =>
-                  setFormData({ ...formData, budget: e.target.value })
+                  setFormData({ ...formData, minBudget: e.target.value })
                 }
-                placeholder="2000"
+                placeholder="1000"
               />
             </div>
 
-            {/* Group Size */}
+            {/* Max Budget */}
             <div>
-              <Label htmlFor="groupSize">Group Size</Label>
+              <Label htmlFor="maxBudget">Max Budget ($)</Label>
               <Input
-                id="groupSize"
+                id="maxBudget"
                 type="number"
-                value={formData.groupSize}
+                value={formData.maxBudget}
                 onChange={(e) =>
-                  setFormData({ ...formData, groupSize: e.target.value })
+                  setFormData({ ...formData, maxBudget: e.target.value })
                 }
-                min={1}
+                placeholder="5000"
               />
             </div>
 
@@ -177,9 +167,9 @@ export function TravelPlanModal({
               <Label htmlFor="type">Travel Type</Label>
               <select
                 id="type"
-                value={formData.travelType}
+                value={formData.type}
                 onChange={(e) =>
-                  setFormData({ ...formData, travelType: e.target.value })
+                  setFormData({ ...formData, type: e.target.value })
                 }
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900"
               >
@@ -205,21 +195,22 @@ export function TravelPlanModal({
                 <option value="active">Active</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="draft">Draft</option>
               </select>
             </div>
 
-            {/* Description / Itinerary */}
+            {/* Description */}
             <div className="md:col-span-2">
-              <Label htmlFor="itinerary">About this trip / Itinerary</Label>
+              <Label htmlFor="description">Itinerary / Description</Label>
               <textarea
-                id="itinerary"
-                value={formData.itinerary}
+                id="description"
+                value={formData.description}
                 onChange={(e) =>
-                  setFormData({ ...formData, itinerary: e.target.value })
+                  setFormData({ ...formData, description: e.target.value })
                 }
                 rows={4}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
-                placeholder="Exploring Tokyo's vibrant culture, from temples to tech districts..."
+                placeholder="Describe the trip plan..."
               />
             </div>
           </div>

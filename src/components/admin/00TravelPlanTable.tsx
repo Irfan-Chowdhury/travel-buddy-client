@@ -1,43 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Edit, Trash2, Plus } from "lucide-react";
-import toast from "react-hot-toast";
-import {
-  getTravelPlans,
-  createTravelPlan,
-  updateTravelPlan,
-  deleteTravelPlan,
-  TravelPlan,
-} from "@/lib/api";
 import { Button } from "../ui/Button";
 import { TravelPlanModal } from "./TravelPlanModal";
 
+interface TravelPlan {
+  id: string;
+  destination: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  status: "active" | "completed" | "cancelled" | "draft";
+  budget: {
+    min: number;
+    max: number;
+  };
+  description?: string;
+}
+
+const MOCK_PLANS: TravelPlan[] = [
+  {
+    id: "1",
+    destination: "Tokyo, Japan",
+    type: "Adventure",
+    startDate: "2024-06-15",
+    endDate: "2024-06-25",
+    status: "active",
+    budget: { min: 2000, max: 4000 },
+  },
+  {
+    id: "2",
+    destination: "Barcelona, Spain",
+    type: "Culture",
+    startDate: "2024-07-01",
+    endDate: "2024-07-10",
+    status: "active",
+    budget: { min: 1500, max: 3000 },
+  },
+  {
+    id: "3",
+    destination: "Bali, Indonesia",
+    type: "Relaxation",
+    startDate: "2024-08-10",
+    endDate: "2024-08-20",
+    status: "draft",
+    budget: { min: 1000, max: 2000 },
+  },
+];
+
 export function TravelPlanTable() {
-  const [plans, setPlans] = useState<TravelPlan[]>([]);
-  const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState<any>(null);
+  const [plans, setPlans] = useState<TravelPlan[]>(MOCK_PLANS);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<TravelPlan | undefined>();
-  const [loading, setLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    loadPlans(page);
-  }, [page]);
-
-  async function loadPlans(page: number) {
-    try {
-      setLoading(true);
-      const res = await getTravelPlans(page);
-      setPlans(res?.data?.data ?? []);
-      setPagination(res?.data ?? null);
-    } catch {
-      toast.error("Failed to load travel plans");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const handleAdd = () => {
     setEditingPlan(undefined);
@@ -49,55 +64,31 @@ export function TravelPlanTable() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this plan?")) return;
-
-    try {
-      await deleteTravelPlan(id);
-      toast.success("Travel plan deleted");
-      await loadPlans(page);
-    } catch {
-      toast.error("Delete failed");
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this plan?")) {
+      setPlans((prev) => prev.filter((p) => p.id !== id));
     }
   };
 
-  function formatDate(dateString: string) {
-    if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-
-
-  // create or update
-  const handleSubmit = async (data: any) => {
-    try {
-      setIsSubmitting(true);
-
-      if (editingPlan) {
-        // UPDATE
-        const res = await updateTravelPlan(editingPlan.id, data);
-        toast.success(res.message || "Travel plan updated");
-      } else {
-        // CREATE
-        const res = await createTravelPlan(data);
-        toast.success(res.message || "Travel plan created");
-      }
-
-      await loadPlans(page);
-      setIsModalOpen(false);
-    } catch (error: any) {
-      if (error?.status === 422 && error?.data?.errors) {
-        Object.values(error.data.errors).forEach((messages: any) => {
-          (messages as string[]).forEach((msg) => toast.error(msg));
-        });
-      } else {
-        toast.error(error?.data?.message || "Something went wrong");
-      }
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = (data: any) => {
+    if (editingPlan) {
+      // Update existing plan
+      setPlans((prev) =>
+        prev.map((p) =>
+          p.id === editingPlan.id
+            ? { ...p, ...data }
+            : p
+        )
+      );
+    } else {
+      // Add new plan
+      setPlans((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          ...data,
+        },
+      ]);
     }
   };
 
@@ -109,16 +100,11 @@ export function TravelPlanTable() {
         return "bg-blue-100 text-blue-700";
       case "cancelled":
         return "bg-red-100 text-red-700";
+      case "draft":
       default:
         return "bg-gray-100 text-gray-700";
     }
   };
-
-  if (loading) {
-    return (
-      <div className="p-6 text-center text-gray-500">Loading travel plans...</div>
-    );
-  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -131,11 +117,7 @@ export function TravelPlanTable() {
           </p>
         </div>
 
-        <Button
-          onClick={handleAdd}
-          className="bg-teal-600 hover:bg-teal-700"
-          disabled={isSubmitting}
-        >
+        <Button onClick={handleAdd} className="bg-teal-600 hover:bg-teal-700">
           <Plus className="w-4 h-4 mr-2" />
           Add Plan
         </Button>
@@ -150,7 +132,7 @@ export function TravelPlanTable() {
                 Destination
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Dates
+                Date
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Budget
@@ -172,21 +154,16 @@ export function TravelPlanTable() {
                     <p className="text-sm font-medium text-gray-900">
                       {plan.destination}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {plan.travel_type || "—"}
-                    </p>
+                    <p className="text-xs text-gray-500">{plan.type}</p>
                   </div>
                 </td>
 
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {formatDate(plan.start_date)} → {formatDate(plan.end_date)}
+                  {plan.startDate}
                 </td>
 
-
-
-
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {plan.budget ? `$${plan.budget}` : "Not set"}
+                  ${plan.budget.min} - ${plan.budget.max}
                 </td>
 
                 <td className="px-6 py-4">
@@ -221,51 +198,6 @@ export function TravelPlanTable() {
           </tbody>
         </table>
       </div>
-
-      {/* Pagination */}
-      {pagination && (
-        <div className="flex justify-center gap-2 p-4">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className={`px-3 py-1 rounded ${
-              page === 1
-                ? "bg-gray-200 text-gray-400"
-                : "bg-gray-100 hover:bg-gray-200"
-            }`}
-          >
-            Prev
-          </button>
-
-          {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map(
-            (num) => (
-              <button
-                key={num}
-                onClick={() => setPage(num)}
-                className={`px-3 py-1 rounded border ${
-                  num === page
-                    ? "bg-teal-600 text-white border-teal-600"
-                    : "bg-white hover:bg-gray-100 border-gray-300"
-                }`}
-              >
-                {num}
-              </button>
-            )
-          )}
-
-          <button
-            disabled={page === pagination.last_page}
-            onClick={() => setPage(page + 1)}
-            className={`px-3 py-1 rounded ${
-              page === pagination.last_page
-                ? "bg-gray-200 text-gray-400"
-                : "bg-gray-100 hover:bg-gray-200"
-            }`}
-          >
-            Next
-          </button>
-        </div>
-      )}
 
       {/* Modal */}
       <TravelPlanModal
