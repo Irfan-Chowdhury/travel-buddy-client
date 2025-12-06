@@ -200,28 +200,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
         </div>
 
-        {/* REMEMBER ME */}
-        <div className="flex items-center justify-between">
-          <label className="flex items-center">
-            <input
-              id="rememberMe"
-              name="rememberMe"
-              type="checkbox"
-              checked={formData.rememberMe}
-              onChange={handleChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <span className="ml-2 block text-sm text-gray-700">
-              Remember me
-            </span>
-          </label>
-
-          <div className="text-sm">
-            <a className="font-medium text-blue-600 hover:text-blue-500" href="#">
-              Forgot your password?
-            </a>
-          </div>
-        </div>
+      
       </div>
 
       <div className="pt-2">

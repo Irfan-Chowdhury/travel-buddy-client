@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { RegistrationForm } from "./RegistrationForm";
 
 // import { RegistrationForm } from "./RegistrationForm";
@@ -18,9 +19,9 @@ export default function RegistrationPage() {
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Already have an account?{" "}
-            <a href="#" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
               Sign in
-            </a>
+            </Link>
           </p>
         </div>
       </div>
