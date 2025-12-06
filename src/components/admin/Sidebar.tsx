@@ -2,6 +2,7 @@
 
 import { Home, Users, Map, BarChart3, Settings, LogOut, Compass } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { handleLogout } from "@/lib/logout";
 
 export function Sidebar() {
   const pathname = usePathname(); // current route
@@ -51,10 +52,10 @@ export function Sidebar() {
       {/* Logout */}
       <div className="p-4 border-t border-gray-100">
         <button
-          onClick={() => {
-            // TODO: handle logout logic here
-            router.push("/login");
-          }}
+            onClick={async () => {
+              await handleLogout();   // remove token + call backend API
+              router.push("/login");  // smooth redirect, no reload
+            }}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors duration-200"
         >
           <LogOut className="w-5 h-5" />
