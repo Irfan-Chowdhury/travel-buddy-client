@@ -5,6 +5,9 @@ import { Mail, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Label } from "../ui/Label";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 interface FormErrors {
   email?: string;
@@ -17,6 +20,8 @@ export default function LoginForm() {
     password: "",
     rememberMe: false,
   });
+
+  const router = useRouter();
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
@@ -40,25 +45,65 @@ export default function LoginForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (!validate()) return;
+  if (!validate()) return;
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    try {
-      // Simulated API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+  try {
 
-      setIsSuccess(true);
-      console.log("Login submitted:", formData);
-    } catch (error) {
-      console.error("Login failed", error);
-    } finally {
-      setIsSubmitting(false);
+    const formBody = new FormData();
+    formBody.append("email", formData.email);
+    formBody.append("password", formData.password);
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+      body: formBody,
+    });
+
+    const json = await res.json();
+
+    if (!json.success) {
+      toast.error(json.message || "Login failed");
+      return;
     }
-  };
+
+    toast.success("Login successful!");
+
+    // Save token in localStorage
+    localStorage.setItem("token", json.data.token);
+
+    // Reset form
+    setFormData({
+      email: "",
+      password: "",
+      rememberMe: false,
+    });
+
+    setErrors({});
+
+    // Redirect according to user role
+    const role = json.data.user.role;
+
+    if (role === "admin") {
+      router.push("/admin/dashboard");
+    } else {
+      router.push("/user/dashboard");
+    }
+
+  } catch (error) {
+    console.error("Login failed:", error);
+    toast.error("Something went wrong");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
