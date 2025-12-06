@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Label } from "../ui/Label";
 import type { TravelPlan } from "@/lib/api";
 
-interface TravelPlanModalProps {
+interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: any) => void;
@@ -19,43 +19,58 @@ export function TravelPlanModal({
   onClose,
   onSubmit,
   initialData,
-}: TravelPlanModalProps) {
+}: Props) {
+  const [steps, setSteps] = useState<string[]>([]); // <-- FIXED: Always initialized safely
+
   const [formData, setFormData] = useState({
+    title: "",
+    short_description: "",
     destination: "",
     startDate: "",
     endDate: "",
     budget: "",
     travelType: "Solo",
-    itinerary: "",
     status: "active",
     groupSize: "1",
   });
 
+  // Load initial data when editing
   useEffect(() => {
     if (initialData) {
       setFormData({
+        title: initialData.title ?? "",
+        short_description: initialData.short_description ?? "",
         destination: initialData.destination ?? "",
         startDate: initialData.start_date ?? "",
         endDate: initialData.end_date ?? "",
         budget: initialData.budget ? String(initialData.budget) : "",
         travelType: initialData.travel_type ?? "Solo",
-        itinerary: initialData.itinerary ?? "",
         status: initialData.status ?? "active",
         groupSize: initialData.group_size
           ? String(initialData.group_size)
           : "1",
       });
+
+      setSteps(
+        Array.isArray(initialData.itinerary)
+          ? initialData.itinerary
+          : []
+      );
     } else {
+      // RESET for Add New
       setFormData({
+        title: "",
+        short_description: "",
         destination: "",
         startDate: "",
         endDate: "",
         budget: "",
         travelType: "Solo",
-        itinerary: "",
         status: "active",
         groupSize: "1",
       });
+
+      setSteps([]); // <-- FIXED
     }
   }, [initialData, isOpen]);
 
@@ -65,16 +80,17 @@ export function TravelPlanModal({
     e.preventDefault();
 
     onSubmit({
-      // match Laravel fields exactly
-      user_id: 1, // TODO: replace with real logged-in user id later
+      user_id: 1,
+      title: formData.title,
+      short_description: formData.short_description,
       destination: formData.destination,
       start_date: formData.startDate,
       end_date: formData.endDate,
       budget: formData.budget ? Number(formData.budget) : null,
       travel_type: formData.travelType,
-      itinerary: formData.itinerary,
       status: formData.status,
-      group_size: formData.groupSize ? Number(formData.groupSize) : 1,
+      group_size: Number(formData.groupSize),
+      itinerary: steps, // JSON array
     });
 
     onClose();
@@ -83,42 +99,66 @@ export function TravelPlanModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">
+        <div className="flex justify-between p-6 border-b">
+          <h2 className="text-xl font-bold">
             {initialData ? "Edit Travel Plan" : "Create Travel Plan"}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X className="w-6 h-6" />
+          <button onClick={onClose}>
+            <X className="w-6 h-6 text-gray-500" />
           </button>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* Title */}
+            <div className="md:col-span-2">
+              <Label>Title</Label>
+              <Input
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                required
+              />
+            </div>
+
+            {/* Short Description */}
+            <div className="md:col-span-2">
+              <Label>Short Description</Label>
+              <textarea
+                rows={3}
+                className="w-full border p-2 rounded"
+                value={formData.short_description}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    short_description: e.target.value,
+                  })
+                }
+              />
+            </div>
+
             {/* Destination */}
             <div className="md:col-span-2">
-              <Label htmlFor="destination" required>
-                Destination
-              </Label>
+              <Label>Destination</Label>
               <Input
-                id="destination"
                 value={formData.destination}
                 onChange={(e) =>
                   setFormData({ ...formData, destination: e.target.value })
                 }
-                placeholder="e.g. Tokyo, Japan"
                 required
               />
             </div>
 
             {/* Start Date */}
             <div>
-              <Label htmlFor="startDate" required>
-                Start Date
-              </Label>
+              <Label>Start Date</Label>
               <Input
-                id="startDate"
                 type="date"
                 value={formData.startDate}
                 onChange={(e) =>
@@ -130,11 +170,8 @@ export function TravelPlanModal({
 
             {/* End Date */}
             <div>
-              <Label htmlFor="endDate" required>
-                End Date
-              </Label>
+              <Label>End Date</Label>
               <Input
-                id="endDate"
                 type="date"
                 value={formData.endDate}
                 onChange={(e) =>
@@ -146,42 +183,38 @@ export function TravelPlanModal({
 
             {/* Budget */}
             <div>
-              <Label htmlFor="budget">Budget ($)</Label>
+              <Label>Budget ($)</Label>
               <Input
-                id="budget"
                 type="number"
                 value={formData.budget}
                 onChange={(e) =>
                   setFormData({ ...formData, budget: e.target.value })
                 }
-                placeholder="2000"
               />
             </div>
 
             {/* Group Size */}
             <div>
-              <Label htmlFor="groupSize">Group Size</Label>
+              <Label>Group Size</Label>
               <Input
-                id="groupSize"
                 type="number"
+                min={1}
                 value={formData.groupSize}
                 onChange={(e) =>
                   setFormData({ ...formData, groupSize: e.target.value })
                 }
-                min={1}
               />
             </div>
 
-            {/* Type */}
+            {/* Travel Type */}
             <div>
-              <Label htmlFor="type">Travel Type</Label>
+              <Label>Travel Type</Label>
               <select
-                id="type"
+                className="border rounded px-3 py-2 w-full"
                 value={formData.travelType}
                 onChange={(e) =>
                   setFormData({ ...formData, travelType: e.target.value })
                 }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900"
               >
                 <option value="Solo">Solo</option>
                 <option value="Family">Family</option>
@@ -193,14 +226,13 @@ export function TravelPlanModal({
 
             {/* Status */}
             <div>
-              <Label htmlFor="status">Status</Label>
+              <Label>Status</Label>
               <select
-                id="status"
+                className="border rounded px-3 py-2 w-full"
                 value={formData.status}
                 onChange={(e) =>
                   setFormData({ ...formData, status: e.target.value })
                 }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900"
               >
                 <option value="active">Active</option>
                 <option value="completed">Completed</option>
@@ -208,24 +240,44 @@ export function TravelPlanModal({
               </select>
             </div>
 
-            {/* Description / Itinerary */}
+            {/* ITINERARY STEPS */}
             <div className="md:col-span-2">
-              <Label htmlFor="itinerary">About this trip / Itinerary</Label>
-              <textarea
-                id="itinerary"
-                value={formData.itinerary}
-                onChange={(e) =>
-                  setFormData({ ...formData, itinerary: e.target.value })
-                }
-                rows={4}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
-                placeholder="Exploring Tokyo's vibrant culture, from temples to tech districts..."
-              />
+              <Label>Itinerary Steps</Label>
+
+              {steps.map((step, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <Input
+                    value={step}
+                    onChange={(e) => {
+                      const updated = [...steps];
+                      updated[index] = e.target.value;
+                      setSteps(updated);
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      setSteps(steps.filter((_, i) => i !== index))
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                onClick={() => setSteps([...steps, ""])}
+              >
+                + Add Step
+              </Button>
             </div>
+
           </div>
 
-          {/* Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          {/* Footer */}
+          <div className="flex justify-end gap-3 border-t pt-4">
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancel
             </Button>
@@ -233,6 +285,7 @@ export function TravelPlanModal({
               {initialData ? "Save Changes" : "Create Plan"}
             </Button>
           </div>
+
         </form>
       </div>
     </div>

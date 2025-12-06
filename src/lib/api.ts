@@ -155,7 +155,7 @@ export interface TravelPlan {
   end_date: string;
   budget: number | null;
   travel_type: string | null;
-  itinerary: string | null;
+  itinerary: string[] | null;
   group_size: number;
   status: "active" | "completed" | "cancelled";
   created_at: string;

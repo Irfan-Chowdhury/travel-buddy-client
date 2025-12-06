@@ -147,6 +147,9 @@ export function TravelPlanTable() {
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Title
+              </th>
+              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Destination
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -167,6 +170,9 @@ export function TravelPlanTable() {
           <tbody className="divide-y divide-gray-100">
             {plans.map((plan) => (
               <tr key={plan.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  {plan.title}
+                </td>
                 <td className="px-6 py-4">
                   <div>
                     <p className="text-sm font-medium text-gray-900">
