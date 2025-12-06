@@ -77,7 +77,8 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     // Save token in localStorage
     localStorage.setItem("token", json.data.token);
-
+    localStorage.setItem("user", JSON.stringify(json.data.user));
+    
     // Reset form
     setFormData({
       email: "",
